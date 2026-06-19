@@ -9,6 +9,11 @@ A Magento 2 project that monitors the secondary silver market by automatically i
 ![Screenshot 1](screenshots/001.png)
 ![Screenshot 2](screenshots/002.png)
 ![Screenshot 3](screenshots/003.png)
+![Screenshot 4](screenshots/004.png)
+![Screenshot 5](screenshots/005.png)
+![Screenshot 6](screenshots/006.png)
+![Screenshot 7](screenshots/007.png)
+![Screenshot 8](screenshots/008.png)
 
 ## Overview
 
