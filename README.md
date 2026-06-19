@@ -2,7 +2,7 @@
 
 ![SilverBot](logo/logo.png)
 
-A Magento 2 module that monitors the secondary silver market by automatically importing offers from OLX, enriching them with silver-specific metadata using OpenAI, and displaying live spot price data sourced from goldapi.io.
+A Magento 2 project that monitors the secondary silver market by automatically importing offers from OLX, enriching them with silver-specific metadata using OpenAI, and displaying live spot price data sourced from goldapi.io.
 
 ## Screenshots
 
