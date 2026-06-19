@@ -3,6 +3,8 @@
 ##
 ## Version 53.0.0
 
+name: magento
+
 ## To use SSH, see https://github.com/markshust/docker-magento#ssh
 ## Linux users, see https://github.com/markshust/docker-magento#linux
 
