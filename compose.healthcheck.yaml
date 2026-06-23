@@ -55,7 +55,8 @@ services:
   opensearch:
     healthcheck:
       test: "curl --fail opensearch:9200/_cat/health >/dev/null || exit 1"
-      <<: *healthcheck-slow-start
+      <<: *healthcheck-defaults
+      start_period: 90s
 
   #elasticsearch:
   #  healthcheck:
