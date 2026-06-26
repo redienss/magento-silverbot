@@ -1,3 +1,4 @@
 src/
 compose.versions.yaml
 env/cloudflare.env
+xagpln_data/
