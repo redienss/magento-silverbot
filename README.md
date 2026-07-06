@@ -175,7 +175,7 @@ All settings live under **Stores → Configuration → Redienss**, split by modu
 
 Use **Test Connection** to verify the API key before saving.
 
-**Example prompt:**
+**Default prompt** (this is the value pre-filled in the admin config — copy it verbatim if you ever need to restore it):
 
 ```
 You are a data parser for OLX listings.
@@ -192,15 +192,45 @@ Rules:
 - price: number without currency
 - weight: grams
 - silver purity: integer in the 1-999 range (e.g. "925", "999", "800")
-  - if given as a decimal fraction (e.g. 0.900, 0.925) → multiply by 1000
+  - if given as a decimal fraction (e.g. 0.900, 0,900, 0.925) → multiply by 1000 (0.900 → 900)
   - if already an integer (e.g. 900, 925) → leave as-is
 - missing data → null
-- composition: estimate elemental mass fractions of the item's TOTAL weight
-  using periodic-table symbols; standard silver alloys use Cu for the remainder
-  unless the listing indicates otherwise
+- composition: estimate elemental mass fractions of the item's TOTAL weight; use periodic-table symbols
+  - baseline (no stones, no plating): derive straight from purity, e.g. 999 → {"Ag":0.999,"Cu":0.001}, 925 → {"Ag":0.925,"Cu":0.075}, 800 → {"Ag":0.800,"Cu":0.200}
+  - standard silver alloys use Cu for the remainder unless the listing indicates otherwise
+  - if the listing/photo shows gold instead of silver, use "Au" as the primary metal instead of "Ag" (do not include "Ag"), with "Cu" and/or other elements for the remainder
+  - if the item is gold-plated (silver or base metal), add a small "Au" fraction for the plating, e.g. 0.003-0.010, then scale the rest down so everything still sums to 1.0
+  - gemstones, glass, or mineral stones → include as "Si" (or a more specific element symbol if the material is clearly identifiable, e.g. quartz-like minerals as "Si")
+  - pearls or other organic material → include as "Ca"
+  - stone/non-metal weight share: look at the stone(s) size relative to the whole item in the photo and estimate what fraction of the TOTAL weight they represent - a small accent stone ≈ 0.05-0.15, a single prominent centerpiece stone ≈ 0.20-0.40, large and/or multiple large stones covering much of the piece ≈ 0.50-0.70+
+  - once a stone/non-metal fraction is estimated, the metal elements must be scaled down proportionally so metal + stones = 1.0 - do NOT just append the stone fraction on top of the full-purity metal split
+    - e.g. purity 800 with an estimated 50% stone share → {"Si":0.500,"Ag":0.400,"Cu":0.100} (correct, sums to 1.0), NOT {"Si":0.500,"Ag":0.800,"Cu":0.200} (wrong, sums to 1.5)
+  - every element actually present in the item must have a value greater than 0 - never output 0 or 0.0 for an element you've included (e.g. a bracelet with visible stones must have "Si" > 0)
+  - all composition values must sum to exactly 1.0
+  - if purity is unknown → set composition to null
 
-Offer data:
+The first photo from the listing is also attached.
+
+Use both:
+1. the JSON listing data below
+2. the attached image
+
+If the image clearly shows:
+- silver hallmarks or purity stamps,
+- weight markings,
+- coin or bar inscriptions,
+- manufacturer markings,
+
+use that information to fill or correct the extracted values.
+
+If the image contradicts the text, prefer the information visible in the image only when it is clear and unambiguous.
+
+Return ONLY the JSON object.
+
+Listing data (JSON):
+<<<JSON>>>
 {json_offer}
+<<<END JSON>>>
 ```
 
 ### SilverBot AlphaVantage → AlphaVantage API
