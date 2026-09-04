@@ -1,3 +1,5 @@
+# The private magento-silverbot-src repo is cloned here directly, not a submodule — see
+# README.md's "Source code" section.
 src/
 compose.versions.yaml
 env/cloudflare.env
