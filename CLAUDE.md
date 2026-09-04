@@ -7,11 +7,13 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 This repository (`redienss/magento-silverbot`, **public**) is the infra half of SilverBot: `bin/`
 (markshust/docker-magento wrappers), `compose*.yaml`, `Makefile`, `env/`, `screenshots/`,
 `logo/`, and the project's public-facing `README.md`. The Magento code itself — the four
-`Redienss_SilverBot*` modules — lives in the **private** `src` submodule
-(`redienss/magento-silverbot-src`), which also holds `src/CLAUDE.md` and the `src/knowledge/`
-Obsidian vault (architecture, integration contracts, ops runbooks, ADRs, reference tables, the
-`TODO/` task tree). **When working inside `src/`, read `src/CLAUDE.md` and
-`src/knowledge/Home.md` first** — this file only covers the parent/infra repo.
+`Redienss_SilverBot*` modules — lives in the **private** `src` repository
+(`redienss/magento-silverbot-src`), cloned directly into `src/` here — **not** a git submodule,
+so a change there never needs a follow-up pointer commit in this repo (`src/` is gitignored).
+It also holds `src/CLAUDE.md` and the `src/knowledge/` Obsidian vault (architecture, integration
+contracts, ops runbooks, ADRs, reference tables, the `TODO/` task tree). **When working inside
+`src/`, read `src/CLAUDE.md` and `src/knowledge/Home.md` first** — this file only covers the
+parent/infra repo.
 
 Both repos are on branch `main`.
 
@@ -26,11 +28,9 @@ GitHub for review. This is the one push/PR action that doesn't need a fresh go-a
 and do not push to `main` directly — every change reaches `main` through a PR they merge, even a
 one-line fix.
 
-**Exception: bumping the `src` submodule pointer** after a `src` PR is merged is mechanical
-bookkeeping — it only records which already-reviewed `src` commit this repo points at, no new
-code — so push that straight to `main`, no separate PR needed for it.
-
-**A commit message is one line and concise**, saying what the change does.
+**A commit message is one line and concise**, saying what the change does. There is no
+submodule-pointer bookkeeping to worry about — `src` is a plain gitignored clone, not a
+submodule, so a `src` change never touches this repo at all.
 
 ## Operations
 

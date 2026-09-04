@@ -123,6 +123,17 @@ The decimal price/weight/purity attributes are filterable in layered navigation.
   - **Composition** — AI-estimated elemental breakdown as a table and pie chart.
 - **Spot premium/discount** — each product shows how its implied silver price compares to live spot (e.g. `SPOT -36.0%`).
 
+## Source code
+
+The Magento code — the four `Redienss_SilverBot*` modules and the project's internal knowledge
+base — lives in a **private** repository:
+**<https://github.com/redienss/magento-silverbot-src>**
+
+It's a plain clone placed at `src/` in this repo's working tree, not a git submodule — a change
+there never needs a follow-up pointer commit here. This repository only ships the Docker/deploy
+scaffolding and the public-facing docs; `src/` is gitignored. For access, contact
+<redienss@gmail.com>.
+
 ## Requirements
 
 - Docker & Docker Compose
@@ -133,13 +144,19 @@ The decimal price/weight/purity attributes are filterable in layered navigation.
 
 ## Installation
 
-### 1. Start the Docker environment
+### 1. Get the source
+
+```bash
+git clone git@github.com:redienss/magento-silverbot-src.git src
+```
+
+### 2. Start the Docker environment
 
 ```bash
 bin/start
 ```
 
-### 2. Enable the modules
+### 3. Enable the modules
 
 ```bash
 bin/magento module:enable Redienss_SilverBotOlx Redienss_SilverBot Redienss_SilverBotGoldAPI Redienss_SilverBotAlphaVantage
@@ -148,7 +165,7 @@ bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
-### 3. Start the cron service
+### 4. Start the cron service
 
 ```bash
 bin/cron start
