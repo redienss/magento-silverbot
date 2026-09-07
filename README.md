@@ -4,32 +4,52 @@
 
 A Magento 2 project that monitors the secondary silver market by automatically importing offers from OLX, enriching them with silver-specific metadata using OpenAI, and displaying live spot price data alongside historical XAG/PLN price charts.
 
+The storefront runs the **Hyvä** theme and is **Polish by default**, with an English store view at `/en/` and a header/footer language switcher.
+
 ## Screenshots
 
-**Storefront — category listing with silver-specific layered navigation and saved filters**
+### Storefront — Polish by default, English at `/en/`
 
-![Homepage — Latest products with live spot stats in the header](screenshots/001.png)
-![Silver category — layered navigation filters and Saved Filters panel with e-mail alerts](screenshots/002.png)
+![Category listing (Polish) — "Filtry" layered navigation with silver-specific filters and per-unit prices](screenshots/003.png)
+![Category listing (Polish, full page) — grid sorted by price, silver and gold items interleaved](screenshots/014.png)
+![Category listing (English) — active "Silver Price per 1oz" range filter, per-unit prices and a "Go to Offer" button on every tile](screenshots/001.png)
+![Category listing (English) — sorted by price; a gold item shows blank per-unit lines next to populated silver tiles](screenshots/002.png)
 
-**Product page — spot premium/discount, details, price chart and composition**
+### Product page
 
-![Product page — SPOT premium/discount indicator and Go to Offer link](screenshots/003.png)
-![More Information tab — OLX data, purity, weight, per-unit silver prices and elemental composition](screenshots/004.png)
-![Price Chart tab — historical XAG/PLN with SMA 9/21, linear-regression channel and product price line](screenshots/005.png)
-![Composition tab — AI-estimated elemental composition table and pie chart](screenshots/006.png)
+![Product page (English) — two-column layout, "Current offer" badge, SPOT discount indicator and "Go to Offer"](screenshots/004.png)
+![Product page (English) — description, More Information and the historical XAG/PLN Price Chart with SMA 9/21 and range controls](screenshots/005.png)
+![Product page (Polish) — formatted purity/weight in "Więcej informacji" and the Composition table with pie chart below](screenshots/006.png)
+![Product page (Polish) — gallery lightbox / zoom](screenshots/008.png)
+![Product page (Polish) — review form and the Polish footer with language switcher and newsletter signup](screenshots/007.png)
 
-**E-mail alerts (desktop and mobile)**
+### Saved filters & e-mail alerts
 
-![Alert e-mail — new product matching a saved filter](screenshots/007.png)
-![Mobile — alert e-mail, product page, price chart and composition](screenshots/008.png)
+![Category listing — Saved Filters panel: saved filter sets with per-filter e-mail-alert toggles](screenshots/010.png)
+![Category listing — three stacked range filters narrowing the catalog to items priced near or below silver spot](screenshots/011.png)
 
-**CLI and admin configuration**
+### Wishlist
 
-![CLI — silverbot command namespace](screenshots/009.png)
-![Admin — SilverBot General and OpenAI API configuration](screenshots/010.png)
-![Admin — SilverBot AlphaVantage API configuration](screenshots/011.png)
-![Admin — SilverBot GoldAPI configuration](screenshots/012.png)
-![Admin — SilverBot OLX configuration](screenshots/013.png)
+![Wishlist (Polish) — each item links straight to its OLX offer instead of Add to Cart](screenshots/009.png)
+
+### Reading a listing — spot premium/discount
+
+![Product page (English) — pure 925 chain at SPOT -51.8%; the product's per-oz price sits far below the silver price history: a good buying opportunity](screenshots/012.png)
+![Product page (Polish, full page) — the same 925 chain at SPOT -51.7%, with the full price chart and composition breakdown](screenshots/015.png)
+![Product page (Polish, full page) — a 925 item at SPOT +370.5%; the chart hides the reference line because the asking price dwarfs the silver spot ATH: badly overpriced for its silver content](screenshots/013.png)
+
+### E-mail alerts (desktop and mobile)
+
+![Alert e-mail — new product matching a saved filter](screenshots/016.png)
+![Mobile — alert e-mail, product page, price chart and composition (pre-Hyvä capture, pending refresh)](screenshots/017.png)
+
+### CLI and admin configuration
+
+![CLI — silverbot command namespace](screenshots/018.png)
+![Admin — SilverBot General and OpenAI API configuration](screenshots/019.png)
+![Admin — SilverBot AlphaVantage API configuration](screenshots/020.png)
+![Admin — SilverBot GoldAPI configuration](screenshots/021.png)
+![Admin — SilverBot OLX configuration](screenshots/022.png)
 
 ## Overview
 
@@ -44,6 +64,8 @@ The live XAG/PLN spot price (fetched from AlphaVantage) is shown in the storefro
 
 Logged-in customers can save layered-navigation filters and opt in to e-mail alerts, which fire automatically whenever a newly imported product matches a saved filter's criteria.
 
+Imported products are marketplace pointers, not sellable inventory: the cart and checkout are disabled, and every "buy" action deep-links to the original OLX listing. A background job checks each offer roughly once a minute and removes products whose OLX listing has been taken down.
+
 ### Supported marketplaces
 
 | Marketplace | Status |
@@ -57,10 +79,14 @@ SilverBot is split into focused modules so that data sources can be swapped inde
 
 | Module | Responsibility |
 |---|---|
-| `Redienss_SilverBot` | Core: import queue, OpenAI enrichment, product creation, price chart, composition, saved filters, alert e-mails |
-| `Redienss_SilverBotOlx` | OLX scraping — listing/offer fetching and configuration |
+| `Redienss_SilverBot` | Core: import queue, OpenAI enrichment, product creation, price chart, composition, saved filters, alert e-mails, offer-availability sweep |
+| `Redienss_SilverBotOlx` | OLX scraping — listing/offer fetching, availability checks and configuration |
 | `Redienss_SilverBotGoldAPI` | XAG/USD spot price via [goldapi.io](https://www.goldapi.io/) (alternative source, CLI + admin test) |
 | `Redienss_SilverBotAlphaVantage` | XAG/USD and USD/PLN via [alphavantage.co](https://www.alphavantage.co/); source used by the spot-price cron |
+
+The Magento code and the `Redienss/hyva-silvertheme` storefront theme live in the private
+[`magento-silverbot-src`](https://github.com/redienss/magento-silverbot-src) repository (see
+[Source code](#source-code)).
 
 ## How it works
 
@@ -70,7 +96,7 @@ OLX listing pages
       ▼ (hourly cron)
 Import Queue (DB table)
       │
-      ▼ (every 2 minutes cron)
+      ▼ (every 15 minutes cron)
 OLX offer page scrape
       │
       ▼
@@ -84,6 +110,9 @@ Magento product created/updated
       │
       ▼
 Saved-filter match check → alert e-mail to subscribed customers
+
+meanwhile, every minute:
+Offer-availability sweep → OLX listing 404/410? → product removed
 ```
 
 ### Cron jobs
@@ -91,8 +120,9 @@ Saved-filter match check → alert e-mail to subscribed customers
 | Job | Schedule | Description |
 |---|---|---|
 | `silverbot_populate_import_queue` | every hour | Scans configured OLX search pages, adds new offer IDs to the queue |
-| `silverbot_import_queue_worker` | every 2 minutes | Processes one pending queue entry: scrapes OLX, calls OpenAI, creates/updates the product and sends any matching alert e-mails |
+| `silverbot_import_queue_worker` | every 15 minutes | Processes one pending queue entry: scrapes OLX, calls OpenAI, creates/updates the product and sends any matching alert e-mails |
 | `silverbot_fetch_metal_spot_price` | every 2 hours | Fetches XAG/USD and USD/PLN from AlphaVantage and stores the derived XAG/PLN spot price |
+| `silverbot_check_offer_availability` | every minute | Re-checks one imported offer's OLX page; after repeated 404/410 responses the product is removed (with its images). Rate-limit (`403`/`429`) responses are treated as inconclusive and never delete anything |
 
 All cron jobs are gated by the **Enable Cron** master switch.
 
@@ -102,8 +132,8 @@ All cron jobs are gated by the **Enable Cron** master switch.
 |---|---|---|
 | `olx_id` | text | OLX offer ID |
 | `olx_url` | text | Direct URL to the OLX listing |
-| `ag_purity` | decimal | Silver purity in parts per thousand (‰) |
-| `ag_weight` | decimal | Pure silver weight in grams |
+| `ag_purity` | decimal | Silver purity in parts per thousand (‰); shown as `925` |
+| `ag_weight` | decimal | Pure silver weight in grams; shown rounded, e.g. `4.38` |
 | `ag_price_1g` | decimal | Price per gram of pure silver (PLN) |
 | `ag_price_1oz` | decimal | Price per troy ounce (31.1 g) of pure silver (PLN) |
 | `ag_price_1000g` | decimal | Price per kilogram of pure silver (PLN) |
@@ -113,20 +143,25 @@ The decimal price/weight/purity attributes are filterable in layered navigation.
 
 ## Storefront features
 
+- **Hyvä theme** — the storefront runs `Redienss/hyva-silvertheme` (parent `Hyva/default`). All SilverBot surfaces (header stats, per-tile prices, PDP chart/composition, saved filters) are Hyvä-native.
+- **Polish by default, English at `/en/`** — a second store view (`en`) serves English under `/en/`, with Polish at `/`; a compact PL/EN toggle in the header and a language selector in the footer switch between them. Product and category content (OLX titles/descriptions, AI composition text) stays Polish on both views by design.
 - **Header spot stats** — live XAG/USD, XAG/PLN, USD/PLN and total product count.
-- **Silver-specific layered navigation** — filter by purity, weight (range) and price per 1 g / 1 oz / 1000 g of pure silver.
+- **Silver-specific layered navigation** — filter by purity, weight (range) and price per 1 g / 1 oz / 1000 g of pure silver. The panel heading reads *Filtry* on the Polish view.
 - **Saved filters & alerts** — logged-in customers save the current filter set and toggle e-mail alerts per filter; new imports matching a saved filter trigger a notification e-mail.
-- **Per-unit price on tiles** — listing and widget tiles show price per gram/oz/kg and a **Go to Offer** link (in place of Add to Cart) that deep-links to the original OLX listing.
-- **Product page tabs**
-  - **More Information** — OLX URL/ID, purity, weight, per-unit prices, elemental composition.
-  - **Price Chart** — historical XAG/PLN price with SMA 9, SMA 21, a toggleable linear-regression channel and a dashed line for the product's own per-oz silver price, with `5D / 1M / 3M / 6M / YTD / 1Y` ranges (Chart.js).
-  - **Composition** — AI-estimated elemental breakdown as a table and pie chart.
-- **Spot premium/discount** — each product shows how its implied silver price compares to live spot (e.g. `SPOT -36.0%`).
+- **Per-unit price on tiles** — listing and widget tiles show price per gram/oz/kg and a **Go to Offer** link (in place of Add to Cart) that deep-links to the original OLX listing. The same swap applies on the wishlist and compare pages.
+- **No cart / checkout** — imported products are marketplace pointers, so the cart and checkout are disabled throughout.
+- **Marketplace offer availability** — the PDP shows **Current offer** / **Offer no longer available** ("Oferta aktualna" / "Oferta niedostępna") instead of a stock-status badge.
+- **Two-column product page** — gallery + description + specs on the left, buy box + price chart + composition on the right; on long OLX descriptions the *More Information* panel reflows to the right column to keep the two sides balanced.
+- **Product page panels**
+  - **More Information** — OLX URL/ID, purity (`925`), weight (`4.38`), per-unit prices, elemental composition.
+  - **Price Chart** — historical XAG/PLN price with SMA 9, SMA 21, a toggleable linear-regression channel and a dashed line for the product's own per-oz silver price, with `5D / 1M / 3M / 6M / YTD / 1Y` ranges (Chart.js). When the product's per-oz price dwarfs the silver spot all-time high, the reference line is hidden (with a note) so the history stays readable.
+  - **Composition** — AI-estimated elemental breakdown as a table with the pie chart directly below it.
+- **Spot premium/discount** — each product shows how its implied silver price compares to live spot (e.g. `SPOT -36.0%`), a quick read on whether a listing is cheap or dear for its silver content.
 
 ## Source code
 
-The Magento code — the four `Redienss_SilverBot*` modules and the project's internal knowledge
-base — lives in a **private** repository:
+The Magento code — the four `Redienss_SilverBot*` modules, the `Redienss/hyva-silvertheme`
+storefront theme and the project's internal knowledge base — lives in a **private** repository:
 **<https://github.com/redienss/magento-silverbot-src>**
 
 It's a plain clone placed at `src/` in this repo's working tree, not a git submodule — a change
@@ -138,6 +173,7 @@ scaffolding and the public-facing docs; `src/` is gitignored. For access, contac
 
 - Docker & Docker Compose
 - Magento 2.4.x (PHP 8.4)
+- A [Hyvä Themes](https://hyva.io/) licence (the storefront theme extends `Hyva/default`)
 - OpenAI API key
 - AlphaVantage API key (spot price cron); optionally a goldapi.io key
 - [mageplaza/module-smtp](https://github.com/mageplaza/magento-2-smtp) configured for outgoing alert e-mails
@@ -156,7 +192,7 @@ git clone git@github.com:redienss/magento-silverbot-src.git src
 bin/start
 ```
 
-### 3. Enable the modules
+### 3. Enable the modules and theme
 
 ```bash
 bin/magento module:enable Redienss_SilverBotOlx Redienss_SilverBot Redienss_SilverBotGoldAPI Redienss_SilverBotAlphaVantage
@@ -164,6 +200,12 @@ bin/magento setup:upgrade
 bin/magento setup:di:compile
 bin/magento cache:flush
 ```
+
+Set **Redienss Silver (Hyvä)** as the active theme under **Content → Design → Configuration**
+(or via `config:set design/theme/theme_id`). The theme's compiled CSS
+(`web/css/styles.css`) is committed, so no build step is needed to run it. When editing the
+theme's Tailwind sources, rebuild **inside the container** — a host-side `npm run build`
+silently drops vendor imports and corrupts `styles.css`.
 
 ### 4. Start the cron service
 
@@ -179,7 +221,7 @@ All settings live under **Stores → Configuration → Redienss**, split by modu
 
 | Field | Description |
 |---|---|
-| Enable Cron | Master switch for all SilverBot cron jobs (import queue, spot price fetch) |
+| Enable Cron | Master switch for all SilverBot cron jobs (import queue, spot price fetch, offer-availability sweep) |
 
 ### SilverBot → OpenAI API
 
@@ -274,6 +316,7 @@ Use **Test Connection** to verify the key. Register at [goldapi.io](https://www.
 | OLX Query URL | Relative search URL appended to the base URL, e.g. `oferty/q-srebro-proba/` |
 | Total Pages to Fetch | Number of search result pages to scan per hourly run (max 25) |
 | Page Fetch Delay (seconds) | Delay between fetching consecutive pages to avoid overloading OLX |
+| Availability Check Batch Size | How many offers the per-minute availability sweep re-checks per run (raise to match a slower `cron:run` cadence) |
 
 ## CLI commands
 
