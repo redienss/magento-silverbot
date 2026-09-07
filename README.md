@@ -352,3 +352,7 @@ The environment is based on [markshust/docker-magento](https://github.com/marksh
 | Mailcatcher | `sj26/mailcatcher:v0.10.0` |
 
 Use `make help` to list all available `bin/` shortcuts.
+
+## Changelog
+
+There are no tagged releases. [`CHANGELOG.md`](CHANGELOG.md) summarises what changed, grouped by the week it landed.
